@@ -4,6 +4,8 @@ import requests
 
 from azure.cosmos import CosmosClient
 from datetime import datetime, timedelta
+from pathlib import Path
+
 
 ####################
 # GLOBAL VARIABLES #
@@ -26,7 +28,9 @@ def main():
 
     filtered_results = filter_netcraft_results(dummy_results)
 
-    write_results_to_cosmos_db(filtered_results)
+    date_str = write_results_to_cosmos_db(filtered_results)
+
+    write_attack_urls_to_output(filtered_results, date_str)
 
 ##########################################################################
 #
@@ -87,11 +91,12 @@ def filter_netcraft_results(netcraft_results):
 
     for record in netcraft_results:
         hostname = record['hostname']
+        attack_url = record['attack_url']
         target_brand = record['target_brand']
         attack_type = record['attack_type']
         status = record['status']
 
-        filtered_netcraft_results[hostname] = {'target_brand': target_brand, 'attack_type': attack_type, 'status': status}
+        filtered_netcraft_results[attack_url] = {'hostname': hostname, 'target_brand': target_brand, 'attack_type': attack_type, 'status': status}
 
 
     for k,v in filtered_netcraft_results.items():
@@ -129,21 +134,48 @@ def write_results_to_cosmos_db(filtered_results):
     id_date  = int((datetime.utcnow()).timestamp())
     id_date_str = str(id_date)
 
-    # key = hostname
-    # values = target_brand, attack_type, status
+    # key = attack_url
+    # values = hostname, target_brand, attack_type, status
 
-    i = 0
     output = []
 
     for k,v in filtered_results.items():
-        output.append({'host_name': k, 'target_brand': v['target_brand'], 'attack_type': v['attack_type'], 'status': v['status']})
-        i+=1
+        output.append({'attack_url':k , 'hostname': v['hostname'], 'target_brand': v['target_brand'], 'attack_type': v['attack_type'], 'status': v['status']})
 
     container.upsert_item( { 'id': id_date_str,
                              'date_time': id_date_str,
                              'date': date_str,
                              'netcraft_results': output })
 
+    return date_str
+
+##########################################################################
+#
+# Function name: write_attack_urls_to_output
+# Input: TBD
+# Output: TBD
+#
+# Purpose: TBD
+#
+##########################################################################
+def write_attack_urls_to_output(filtered_results, date_str):
+    print ("**** WRITE LIST OF ATTACK URLS TO OUTPUT ****")
+
+    output_filename = "Attack_URL_List_ALL_" + (date_str.replace(':','-')).replace(' ','_')
+    output_filepath = Path('/output') / output_filename
+    print (output_filename)
+    print (output_filepath)
+
+    url_list = []
+
+    for k,v in filtered_results.items():
+        url_list.append(k)
+
+    unique_url_list = list(set(url_list))
+
+    with open(output_filepath, 'w') as output_fh:
+        for url in unique_url_list:
+            output_fh.write('%s\n' % url)
 
 if __name__ == "__main__":
     main()
