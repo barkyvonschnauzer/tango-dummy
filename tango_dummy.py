@@ -30,7 +30,7 @@ def main():
 
     date_str = write_results_to_cosmos_db(filtered_results)
 
-    write_attack_urls_to_output(filtered_results, date_str)
+    #write_attack_urls_to_output(filtered_results, date_str)
 
 ##########################################################################
 #
@@ -161,7 +161,7 @@ def write_results_to_cosmos_db(filtered_results):
 def write_attack_urls_to_output(filtered_results, date_str):
     print ("**** WRITE LIST OF ATTACK URLS TO OUTPUT ****")
 
-    output_filename = "Attack_URL_List_ALL_" + (date_str.replace(':','-')).replace(' ','_')
+    output_filename = "Attack_URL_List_NETCRAFT_" + (date_str.replace(':','-')).replace(' ','_')
     output_filepath = Path('/output') / output_filename
     print (output_filename)
     print (output_filepath)
