@@ -1,2 +1,2 @@
 # tango-dummy
-Keep track of dummy (all) results
+Keep track of dummy (all) results based on region.
